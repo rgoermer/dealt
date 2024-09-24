@@ -1,0 +1,10 @@
+# CMake tmp files
+CMakeLists.txt
+CMakeCache.txt
+Makefile
+cmake_install.cmake
+CMakeFiles/
+
+# Output of make
+tsplines
+

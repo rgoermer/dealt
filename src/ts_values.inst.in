@@ -1,0 +1,61 @@
+template class TSValuesBase<2, 2, 0>;
+template class TSValuesBase<2, 2, 1>;
+template class TSValuesBase<2, 2, 2>;
+template class TSValuesBase<2, 2, 3>;
+
+template class TSValuesBase<3, 3, 0>;
+template class TSValuesBase<3, 3, 1>;
+template class TSValuesBase<3, 3, 2>;
+template class TSValuesBase<3, 3, 3>;
+
+template class TSValuesBase<2, 3, 0>;
+template class TSValuesBase<2, 3, 1>;
+template class TSValuesBase<2, 3, 2>;
+template class TSValuesBase<2, 3, 3>;
+
+
+template class TSFaceValuesBase<2, 2, 0>;
+template class TSFaceValuesBase<2, 2, 1>;
+template class TSFaceValuesBase<2, 2, 2>;
+template class TSFaceValuesBase<2, 2, 3>;
+
+template class TSFaceValuesBase<3, 3, 0>;
+template class TSFaceValuesBase<3, 3, 1>;
+template class TSFaceValuesBase<3, 3, 2>;
+template class TSFaceValuesBase<3, 3, 3>;
+
+template class TSFaceValuesBase<2, 3, 0>;
+template class TSFaceValuesBase<2, 3, 1>;
+template class TSFaceValuesBase<2, 3, 2>;
+template class TSFaceValuesBase<2, 3, 3>;
+
+template class TSValues<2, 2, 0>;
+template class TSValues<2, 2, 1>;
+template class TSValues<2, 2, 2>;
+template class TSValues<2, 2, 3>;
+
+template class TSValues<3, 3, 0>;
+template class TSValues<3, 3, 1>;
+template class TSValues<3, 3, 2>;
+template class TSValues<3, 3, 3>;
+
+template class TSValues<2, 3, 0>;
+template class TSValues<2, 3, 1>;
+template class TSValues<2, 3, 2>;
+template class TSValues<2, 3, 3>;
+
+
+template class TSFaceValues<2, 2, 0>;
+template class TSFaceValues<2, 2, 1>;
+template class TSFaceValues<2, 2, 2>;
+template class TSFaceValues<2, 2, 3>;
+
+template class TSFaceValues<3, 3, 0>;
+template class TSFaceValues<3, 3, 1>;
+template class TSFaceValues<3, 3, 2>;
+template class TSFaceValues<3, 3, 3>;
+
+template class TSFaceValues<2, 3, 0>;
+template class TSFaceValues<2, 3, 1>;
+template class TSFaceValues<2, 3, 2>;
+template class TSFaceValues<2, 3, 3>;

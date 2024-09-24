@@ -1,0 +1,212 @@
+  template class TS_TriangulationBase<2, 2>;
+  template void TS_TriangulationBase<2, 2>::generate_mesh_file<0>(
+    const std::string&,
+    const bool,
+    const unsigned int, 
+    const std::map<unsigned int, Point<0>>&
+  ) const ;
+  template void TS_TriangulationBase<2, 2>::generate_mesh_file<1>(
+    const std::string&,
+    const bool,
+    const unsigned int, 
+    const std::map<unsigned int, Point<1>>&
+  ) const ;
+  template void TS_TriangulationBase<2, 2>::generate_mesh_file<2>(
+    const std::string&,
+    const bool,
+    const unsigned int, 
+    const std::map<unsigned int, Point<2>>&
+  ) const ;
+  template void TS_TriangulationBase<2, 2>::generate_mesh_file<3>(
+    const std::string&,
+    const bool,
+    const unsigned int, 
+    const std::map<unsigned int, Point<3>>&
+  ) const ;
+  
+  template void TS_TriangulationBase<2, 2>::project_boundary_values<0>(
+    const std::map< 
+              types::boundary_id, 
+              const Function<2, double>* 
+          >& boundary_functions,
+    const std::vector<unsigned int>& n_gauss_points,
+          std::map< 
+              types::global_dof_index,
+              double 
+          >& boundary_values
+  ) const;
+  template void TS_TriangulationBase<2, 2>::project_boundary_values<1>(
+    const std::map< 
+              types::boundary_id, 
+              const Function<2, double>* 
+          >& boundary_functions,
+    const std::vector<unsigned int>& n_gauss_points,
+          std::map< 
+              types::global_dof_index,
+              double 
+          >& boundary_values
+  ) const;
+  template void TS_TriangulationBase<2, 2>::project_boundary_values<2>(
+    const std::map< 
+              types::boundary_id, 
+              const Function<2, double>* 
+          >& boundary_functions,
+    const std::vector<unsigned int>& n_gauss_points,
+          std::map< 
+              types::global_dof_index,
+              double 
+          >& boundary_values
+  ) const;
+  template void TS_TriangulationBase<2, 2>::project_boundary_values<3>(
+    const std::map< 
+              types::boundary_id, 
+              const Function<2, double>* 
+          >& boundary_functions,
+    const std::vector<unsigned int>& n_gauss_points,
+          std::map< 
+              types::global_dof_index,
+              double 
+          >& boundary_values
+  ) const;
+
+  template class TS_TriangulationBase<2, 3>;
+  template void TS_TriangulationBase<2, 3>::generate_mesh_file<0>(
+    const std::string&,
+    const bool,
+    const unsigned int, 
+    const std::map<unsigned int, Point<0>>&
+  ) const ;
+  template void TS_TriangulationBase<2, 3>::generate_mesh_file<1>(
+    const std::string&,
+    const bool,
+    const unsigned int, 
+    const std::map<unsigned int, Point<1>>&
+  ) const ;
+  template void TS_TriangulationBase<2, 3>::generate_mesh_file<2>(
+    const std::string&,
+    const bool,
+    const unsigned int, 
+    const std::map<unsigned int, Point<2>>&
+  ) const ;
+  template void TS_TriangulationBase<2, 3>::generate_mesh_file<3>(
+    const std::string&,
+    const bool,
+    const unsigned int, 
+    const std::map<unsigned int, Point<3>>&
+  ) const ;
+
+  template void TS_TriangulationBase<2, 3>::project_boundary_values<0>(
+    const std::map< 
+              types::boundary_id, 
+              const Function<3, double>* 
+          >& boundary_functions,
+    const std::vector<unsigned int>& n_gauss_points,
+          std::map< 
+              types::global_dof_index,
+              double 
+          >& boundary_values
+  ) const;
+  template void TS_TriangulationBase<2, 3>::project_boundary_values<1>(
+    const std::map< 
+              types::boundary_id, 
+              const Function<3, double>* 
+          >& boundary_functions,
+    const std::vector<unsigned int>& n_gauss_points,
+          std::map< 
+              types::global_dof_index,
+              double 
+          >& boundary_values
+  ) const;
+  template void TS_TriangulationBase<2, 3>::project_boundary_values<2>(
+    const std::map< 
+              types::boundary_id, 
+              const Function<3, double>* 
+          >& boundary_functions,
+    const std::vector<unsigned int>& n_gauss_points,
+          std::map< 
+              types::global_dof_index,
+              double 
+          >& boundary_values
+  ) const;
+  template void TS_TriangulationBase<2, 3>::project_boundary_values<3>(
+    const std::map< 
+              types::boundary_id, 
+              const Function<3, double>* 
+          >& boundary_functions,
+    const std::vector<unsigned int>& n_gauss_points,
+          std::map< 
+              types::global_dof_index,
+              double 
+          >& boundary_values
+  ) const;
+
+  template class TS_TriangulationBase<3, 3>;
+  template void TS_TriangulationBase<3, 3>::generate_mesh_file<0>(
+    const std::string&,
+    const bool,
+    const unsigned int, 
+    const std::map<unsigned int, Point<0>>&
+  ) const ;
+  template void TS_TriangulationBase<3, 3>::generate_mesh_file<1>(
+    const std::string&,
+    const bool,
+    const unsigned int, 
+    const std::map<unsigned int, Point<1>>&
+  ) const ;
+  template void TS_TriangulationBase<3, 3>::generate_mesh_file<2>(
+    const std::string&,
+    const bool,
+    const unsigned int, 
+    const std::map<unsigned int, Point<2>>&
+  ) const ;
+  template void TS_TriangulationBase<3, 3>::generate_mesh_file<3>(
+    const std::string&,
+    const bool,
+    const unsigned int, 
+    const std::map<unsigned int, Point<3>>&
+  ) const ; 
+
+  template void TS_TriangulationBase<3, 3>::project_boundary_values<0>(
+    const std::map< 
+              types::boundary_id, 
+              const Function<3, double>* 
+          >& boundary_functions,
+    const std::vector<unsigned int>& n_gauss_points,
+          std::map< 
+              types::global_dof_index,
+              double 
+          >& boundary_values
+  ) const;
+  template void TS_TriangulationBase<3, 3>::project_boundary_values<1>(
+    const std::map< 
+              types::boundary_id, 
+              const Function<3, double>* 
+          >& boundary_functions,
+    const std::vector<unsigned int>& n_gauss_points,
+          std::map< 
+              types::global_dof_index,
+              double 
+          >& boundary_values
+  ) const;
+  template void TS_TriangulationBase<3, 3>::project_boundary_values<2>(
+    const std::map< 
+              types::boundary_id, 
+              const Function<3, double>* 
+          >& boundary_functions,
+    const std::vector<unsigned int>& n_gauss_points,
+          std::map< 
+              types::global_dof_index,
+              double 
+          >& boundary_values
+  ) const;
+  template void TS_TriangulationBase<3, 3>::project_boundary_values<3>(
+    const std::map< 
+              types::boundary_id, 
+              const Function<3, double>* 
+          >& boundary_functions,
+    const std::vector<unsigned int>& n_gauss_points,
+          std::map< 
+              types::global_dof_index,
+              double 
+          >& boundary_values
+  ) const;
