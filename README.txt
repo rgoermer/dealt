@@ -1,5 +1,7 @@
 This implementation of AS T-splines depends on deal.II v9.3.3 or higher. 
 
+If you use this code for your computations, please do cite our work: https://doi.org/10.1007/s00366-024-02002-1
+
 After installation of deal.ii, configure CMakeLists.txt to find your version of deal.ii. 
 The code provided in src/ and inc/ then can be compiled with your standard make commands 
 for deal.ii applications.
