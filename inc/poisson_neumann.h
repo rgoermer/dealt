@@ -54,7 +54,6 @@
 
 #include <utility>
 
-#include <residual_error_estimators.h>
 
 namespace Poisson_Neumann {
   using namespace dealt;
