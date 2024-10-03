@@ -59,7 +59,6 @@ namespace dealt {
     
     template<int dim, int spacedim = dim>
     class Poisson{
-      
 
     protected:
       static constexpr unsigned int dimension       = dim; 
@@ -69,7 +68,6 @@ namespace dealt {
       using cell_iterator           = TriaIterator<dealii::CellAccessor<dim, dim>>;
       using active_face_iterator    = TriaActiveIterator<dealii::TriaAccessor<dim-1, dim, dim>>;
       using active_cell_iterator    = TriaActiveIterator<dealii::CellAccessor<dim, dim>>;
-      
       
       
     public:

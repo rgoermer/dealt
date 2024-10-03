@@ -6,11 +6,12 @@
  * 
  */
 
-#include <residual_error_estimators.h> // Include the header file using double quotes instead of angle brackets
+#include <residual_error_estimators.h> 
+
+
 
 template class dealt::ResidualEstimators::Poisson<2, 2>;
 template class dealt::ResidualEstimators::Poisson<2, 3>;
-
 template class dealt::ResidualEstimators::Poisson<3, 3>;
 
 namespace dealt {
@@ -113,9 +114,9 @@ namespace dealt {
             update_JxW_values |
             update_normal_vectors);
 
-        const std::vector<unsigned int>& p = ts_tria -> get_degree();
+        const std::vector<unsigned int>& p              = ts_tria -> get_degree();
         const std::map<unsigned int, unsigned int>& mof = ts_tria -> get_mof();
-        std::vector<unsigned int> local_dof_indices = ts_tria -> get_IEN_array(cell);
+        std::vector<unsigned int> local_dof_indices     = ts_tria -> get_IEN_array(cell);
         const unsigned int nvf = GeometryInfo<dimension>::vertices_per_face;
         double face_residuals = 0.;
 
@@ -190,6 +191,7 @@ namespace dealt {
             } // for ( q_index )
           } // if ( ... )
         } // for (faces)
+
         return face_residuals;
       } // estimate_face_residual_sigma_const
 
@@ -266,9 +268,10 @@ namespace dealt {
             update_quadrature_points |
             update_JxW_values |
             update_hessians);
-        const unsigned int nvc = GeometryInfo<dimension>::vertices_per_cell;
+
         // Compute the residual on the cell
         double cell_residual = 0.;
+        const unsigned int nvc = GeometryInfo<dimension>::vertices_per_cell,
         const std::vector<unsigned int> &local_dof_indices = ts_tria -> get_IEN_array(cell);
         ts_values.reinit(cell);
         for (const unsigned int q_index : ts_values.quadrature_point_indices())
@@ -277,10 +280,7 @@ namespace dealt {
           double gsgu = 0;
           double au   = 0;
           const Point<space_dimension> &Q = ts_values.quadrature_point(q_index);
-          // sigma is constant one, but still need the Tensor type for calculating gsgu
-          // how to circumvent this?
-          const Tensor<1, space_dimension> &sigma_grad = 
-                                                Tensor<1, space_dimension>(); 
+          const Tensor<1, space_dimension> &sigma_grad = Tensor<1, space_dimension>(); 
           const double a_val = (a==NULL ? 0 : a->value(Q));
           for (const unsigned int i : ts_values.dof_indices())
           {
