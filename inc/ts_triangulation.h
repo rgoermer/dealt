@@ -352,10 +352,6 @@ namespace dealt {
     const unsigned int& 
         get_degree(const unsigned int d) const; 
 
-    // get the map of multiplicities
-    const std::map< unsigned int, unsigned int >& 
-        get_mof() const;
-
     // get IEN array
     const std::map<
             const active_cell_iterator, 
