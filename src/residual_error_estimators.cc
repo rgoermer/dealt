@@ -304,7 +304,33 @@ namespace dealt {
       } // estimate_cell_residual_sigmal_const
 
 
+      template<int dim, int spacedim>
+      void Linear_Elasticity<dim, spacedim>::estimate(
+          const TS_TriangulationBase<dim, spacedim>*    ts_tria,
+          const std::vector<unsigned int>&              n_gauss_points,
+          const Vector<double>&                         solution,
+                Vector<double>&                         residuals,
+          const Function<spacedim>*                     rhs_fcn,
+          const std::map<
+                        types::boundary_id,
+                  const Function<spacedim>*
+                >&                                      neumann_bc,
+          const Function<spacedim>*                     lambda,
+          const Function<spacedim>*                     mu
+        ) {
 
+
+        // Loop over all cells
+        unsigned int counter = 0;
+        for (const auto &cell : ts_tria->active_cell_iterators())
+        {
+          residuals(counter++) = estimate_one_cell(ts_tria, cell,
+                                                   n_gauss_points,
+                                                   rhs_fcn, solution,
+                                                   neumann_bc,
+                                                   sigma, a);
+        }
+      } // estimate
   } // namespace ResidualEstimators
 
 } // namespace dealt
