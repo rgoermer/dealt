@@ -346,24 +346,13 @@ namespace Poisson_Neumann {
 
     // Estimate the error on each cell
     Vector< double > cell_errors(tria.n_active_cells());
-    //std::map<types::boundary_id,
-    //         Function<2> *>
-    //    neumann_data1 = {{Boundary::Neumann, &neumann_bc}};
     std::map<types::boundary_id,
              const Function<2> *>
         neumann_data = {{Boundary::Neumann, &neumann_bc}};
     std::vector<unsigned int> degrees = tria.get_degree();
     degrees[0] = degrees[0] * degrees[0] + 1;
     degrees[1] = degrees[1] * degrees[1] + 1;
-    /*
-    tria.poisson_residual_error_estimate(
-        degrees,
-        &rhs_fcn,
-        neumann_data1,
-        solution,
-        cell_errors);
-    */
-    //Vector< double > new_cell_errors(tria.n_active_cells());
+   
     ResidualEstimators::Poisson<2>::estimate(
       &tria, 
       degrees,
@@ -492,18 +481,22 @@ namespace Poisson_Neumann {
   
     if (strategy == RefinementStrategy::Adaptive) {
       std::map< types::boundary_id,
-                Function<2>* >        neumann_data = {{1, &neumann_bc}};
-      const std::vector<unsigned int>& degrees = tria.get_degree();
-      Vector<double>  local_residuals(tria.n_active_cells());
-      tria.poisson_residual_error_estimate(
-                          {degrees[0]*degrees[0] + 1,
-                           degrees[1]*degrees[1] + 1},
-                           &rhs_fcn,
-                           neumann_data,
-                           solution,
-                           local_residuals
-                           );
+                const Function<2>* >       
+          neumann_data = {{1, &neumann_bc}};
+      std::vector<unsigned int> degrees = tria.get_degree();
+      degrees[0] = degrees[0] * degrees[0] + 1;
+      degrees[1] = degrees[1] * degrees[1] + 1;
+      Vector<double> local_residuals(tria.n_active_cells());
 
+      ResidualEstimators::Poisson<2>::estimate(
+          &tria,
+          degrees,
+          solution,
+          local_residuals,
+          &rhs_fcn,
+          neumann_data
+      );
+       
       tria.refine_fixed_number(local_residuals, 0.10);
     } else { 
       tria.coarsen_bezier_elements();

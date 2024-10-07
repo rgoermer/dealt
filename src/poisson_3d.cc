@@ -1,4 +1,5 @@
 #include <poisson_3d.h>
+#include <residual_error_estimators.h>
 
 namespace Poisson_Singularity_3D {
   Problem Singularity_RHS::prob = Problem::singularity; 
@@ -1163,64 +1164,26 @@ namespace Poisson_Singularity_3D {
         mark.push_back(tria.begin_active());
       } else {
         tria.get_IPF();
-        std::map<TriaIterator<CellAccessor<3, 3>> , double> local_residuals;
+        Vector<double> local_residuals(tria.n_active_splines());
         std::map< types::boundary_id,
-                  const Function<3>* >        neumann_data = 
+                  const Function<3>* >        
+              neumann_data = 
                   {
                     {Boundary::neumann_z0, &neumann_bc_z0},
                     {Boundary::neumann_z1, &neumann_bc_z1}
                   };
-        tria.poisson_residual_error_estimate(
-                             degrees,
-                             &rhs_fcn,
-                             neumann_data,
-                             solution,
-                             local_residuals
-                             );
-  
-        std::vector<TriaIterator<CellAccessor<3, 3>> > cell_list;
-        for (const auto& [c, _] : local_residuals)
-          cell_list.push_back(c);
-  
-  
-        std::sort(cell_list.begin(), cell_list.end(),
-            [local_residuals](const TriaIterator<CellAccessor<3, 3>>& c1,
-                              const TriaIterator<CellAccessor<3, 3>>& c2){
-          return local_residuals.at(c1) > local_residuals.at(c2);
-        });
-  
-        const auto& bezier = tria.get_bezier_elements();
+        
+        ResidualEstimators::Poisson<3>::estimate(
+            &tria,
+            degrees,
+            solution,
+            local_residuals,
+            &rhs_fcn,
+            neumann_data
+        );
 
-        // use a Doerfler marking strategy
-        // For this get the global error indicator: 
-        double global_error = 0; 
-        for (const auto& [_ ,local_error] : local_residuals)
-          global_error += local_error * local_error;
-
-
-        const double theta = 0.3; 
-        double marking_error = 0; 
-        auto res_it = local_residuals.begin(); 
-        while (marking_error < theta * global_error){
-          mark.push_back(res_it -> first); 
-          marking_error += (res_it -> second) * (res_it -> second); 
-          res_it++;
-        }
-
-
-        // After  the marking process, we have to ensure that no 
-        // bezier cells are marked for refinement, as they will be 
-        // cleared after coarsening. 
-        auto mark_it = mark.begin();
-        for (; mark_it != mark.end(); ) {
-          if (std::find(bezier.begin(), bezier.end(), (*mark_it)->parent())
-                      != bezier.end() ){
-            mark.push_back((*mark_it) -> parent());
-            mark_it = mark.erase(mark_it);
-          } else {
-            mark_it++;
-          }
-        }
+        tria.refine_fixed_number(local_residuals, 0.10);
+        
       } // if ( special case )
     }
   

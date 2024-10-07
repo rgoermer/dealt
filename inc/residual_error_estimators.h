@@ -131,8 +131,98 @@ namespace dealt {
           const Vector<double>&                       solution,
           const Function<spacedim>*                   a
       ) ;
-    };
+    }; // Class Poisson
+
+
+
+    template<int dim, int spacedim = dim>
+    class Linear_Elasticity{
+
+    protected:
+      static constexpr unsigned int dimension       = dim; 
+      static constexpr unsigned int space_dimension = spacedim;
+      
+      using face_iterator           = TriaIterator<dealii::TriaAccessor<dim-1, dim, dim>>;
+      using cell_iterator           = TriaIterator<dealii::CellAccessor<dim, dim>>;
+      using active_face_iterator    = TriaActiveIterator<dealii::TriaAccessor<dim-1, dim, dim>>;
+      using active_cell_iterator    = TriaActiveIterator<dealii::CellAccessor<dim, dim>>;
     
+    public:
+      static void estimate(
+        const TS_TriangulationBase<dim, spacedim>*  ts_tria, 
+        const std::vector< unsigned int >&          n_gauss_points,
+        const Vector<double>&                       solution,
+              Vector<double>&                       residuals,
+        const Function<spacedim>*                   rhs_fcn,
+        const std::map< 
+                      types::boundary_id,
+                const Function<spacedim>* 
+              >&                                    neumann_bc,
+        const Function<spacedim>*                   lambda = NULL,
+        const Function<spacedim>*                   mu = NULL
+      );
+
+    private:
+      static double estimate_one_cell(
+        const TS_TriangulationBase<dim, spacedim>*  ts_tria,
+        const active_cell_iterator                  cell,
+        const std::vector< unsigned int >&          n_gauss_points,
+        const Function<spacedim>*                   rhs_fcn,
+        
+        const Vector<double>&                       solution,
+        const std::map< 
+                      types::boundary_id,
+                const Function<spacedim>* 
+              >&                                    neumann_bc,
+        const Function<spacedim>*                   lambda,
+        const Function<spacedim>*                   mu
+      ) ;
+
+      static double estimate_face_residuals(
+          const TS_TriangulationBase<dim, spacedim>*  ts_tria,
+          const active_cell_iterator                  cell,
+          const std::vector<unsigned int>&            n_gauss_points,
+          const Vector<double>&                       solution,
+          const std::map<
+                        types::boundary_id,
+                  const Function<spacedim>*
+                >&                                    neumann_bc
+      ) ;
+
+      static double estimate_cell_residual(
+          const TS_TriangulationBase<dim, spacedim>*  ts_tria,
+          const active_cell_iterator                  cell,
+          const std::vector< unsigned int >&          n_gauss_points,
+          const Function<spacedim>*                   rhs_fcn,
+          
+          const Vector<double>&                       solution,
+          const Function<spacedim>*                   lambda,
+          const Function<spacedim>*                   mu
+      ) ;
+
+      static double estimate_cell_residual_lambda_const(
+          const TS_TriangulationBase<dim, spacedim>*  ts_tria,
+          const active_cell_iterator                  cell,
+          const std::vector<unsigned int>&            n_gauss_points,
+          const Function<spacedim>*                   rhs_fcn,
+          const Vector<double>&                       solution,
+          const Function<spacedim>*                   mu
+      ) ;
+
+      static double estimate_cell_residual_mu_const(
+          const TS_TriangulationBase<dim, spacedim>*  ts_tria,
+          const active_cell_iterator                  cell,
+          const std::vector<unsigned int>&            n_gauss_points,
+          const Function<spacedim>*                   rhs_fcn,
+          const Vector<double>&                       solution,
+          const Function<spacedim>*                   lambda
+      ) ;
+    
+        
+
+
+    }; // Class Linear_Elasticity
+
   } // namespace ResidualEstimators
 
 } // namespace dealt

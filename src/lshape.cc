@@ -1,4 +1,5 @@
 #include <lshape.h>
+#include <residual_error_estimators.h>
 
 namespace LShape {
   template class LShape_Problem<2>;
@@ -924,10 +925,7 @@ namespace LShape {
       if (tria.n_active_cells() == 1) {
         mark.push_back(tria.begin_active());
       } else {
-        std::map<
-            TriaIterator<CellAccessor<dim, dim>>, 
-            double 
-            > local_residuals;
+        Vector<double> local_residuals(tria.n_active_splines());
         std::map< 
             types::boundary_id,
             const Function<dim>*
@@ -939,51 +937,17 @@ namespace LShape {
         for(unsigned int d = 0; d < dim; d++)
           degrees[d] = degrees[d]*degrees[d] + 1;
 
-        tria.poisson_residual_error_estimate(
-                degrees,
-                &rhs_fcn,
-                neumann_data,
-                solution,
-                local_residuals
-                );
-  
-  
-        std::vector<
-            TriaIterator<
-              CellAccessor<dim, dim>
-            >
-          > cell_list;
-        for (const auto& [c, _] : local_residuals)
-          cell_list.push_back(c);
-
-  
-  
-        std::sort(cell_list.begin(), cell_list.end(),
-            [local_residuals](
-                const TriaIterator<CellAccessor<dim, dim>>& c1,
-                const TriaIterator<CellAccessor<dim, dim>>& c2
-            ){
-              return local_residuals.at(c1) > local_residuals.at(c2);
-            }
+        ResidualEstimators::Poisson<dim>::estimate(
+            &tria,
+            degrees,
+            solution,
+            local_residuals,
+            &rhs_fcn,
+            neumann_data
         );
-
-        const auto& bezier = tria.get_bezier_elements();
-        const double percentile = 0.0075;
-        const unsigned int n_cells = cell_list.size() - bezier.size();
-        const unsigned int n_mark  = std::ceil(n_cells * percentile);
   
-        for (unsigned int i = 0;
-                  i < n_cells && mark.size() < n_mark;
-                  i++){
-          if (cell_list[i] -> level() == 0)
-            mark.push_back(cell_list[i]);
-          else if (std::find(bezier.begin(), bezier.end(), cell_list[i]->parent())
-                      != bezier.end() ) {
-            mark.push_back(cell_list[i] -> parent());
-          } else {
-            mark.push_back(cell_list[i]);
-          }
-        }
+        tria.refine_fixed_number(local_residuals, 0.10);
+
       } // if ( special case )
   
       // Finally prepare the next step, by coarsening the bezier elements

@@ -1,4 +1,5 @@
 #include <poisson_benchmark.h>
+#include <residual_error_estimators.h>
 
 namespace Poisson_Benchmark {
         Poisson_Benchmark_3D::Poisson_Benchmark_3D(
@@ -235,15 +236,17 @@ namespace Poisson_Benchmark {
         const Function<3>* 
       > neumann_bc = {{Boundary_IDs::Neumann, &nc_fcn}};
     Functions::ConstantFunction<3> a(1.);
-    tria.poisson_residual_error_estimate(
-        degrees,
-        &rhs_fcn, 
-        &eps_fcn, 
-        &a, 
-        neumann_bc,
-        solution,
-        residuals
-    );
+    ResidualEstimators::Poisson<3>::estimate(
+            &tria,
+            degrees,
+            solution,
+            residuals,
+            &rhs_fcn,
+            neumann_bc,
+            &eps_fcn,
+            &a
+        );
+
 
     residual = residuals.l2_norm(); 
     max_residual = residuals.linfty_norm();

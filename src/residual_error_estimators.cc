@@ -271,7 +271,7 @@ namespace dealt {
 
         // Compute the residual on the cell
         double cell_residual = 0.;
-        const unsigned int nvc = GeometryInfo<dimension>::vertices_per_cell,
+        const unsigned int nvc = GeometryInfo<dimension>::vertices_per_cell;
         const std::vector<unsigned int> &local_dof_indices = ts_tria -> get_IEN_array(cell);
         ts_values.reinit(cell);
         for (const unsigned int q_index : ts_values.quadrature_point_indices())
