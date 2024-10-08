@@ -240,6 +240,13 @@ namespace dealt {
     return out;
   }
 
+  template<int dim, int spacedim>
+  const std::map<unsigned int, unsigned int>& 
+      TS_TriangulationBase<dim, spacedim>::get_mof(
+  ) const {
+    return mof;
+  } // get_mof()
+
   // =============================================================
   //        Assembly section
   // =============================================================
