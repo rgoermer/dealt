@@ -972,7 +972,32 @@ namespace Linear_Elasticity {
         residuals
     );
 
+    Vector<int> levels (tria.n_active_cells());
+    auto cell = tria.begin_active();
+    for (unsigned int n = 0; n < tria.n_active_cells(); n++){
+      levels(n) = cell->level();
+      cell++;
+    }
+
+    // Compute the solution vector in terms of Bernstein polynomials
+          DoFHandler<3>     dof_handler(physical_grid);
+    const FESystem<3>       fe(FE_Bernstein<3>(data.max_degree+order)^3);
+    dof_handler.distribute_dofs(fe);
+
+    Vector<double>    bernstein_solution(dof_handler.n_dofs()); 
+    unsigned int n = 0; 
+    for (const auto& cell : tria.active_cell_iterators()){
+      const auto& IEN = tria.get_IEN_array(cell, 3);
+      const auto& BE  = tria.get_bezier_coefficients(cell);
+
+      
+    }
+
+
+
+
     data_out.add_data_vector(residuals, "cell_errors");
+    data_out.add_data_vector(levels, "levels");
 
     // Build patches
     data_out.build_patches(); 
@@ -985,7 +1010,7 @@ namespace Linear_Elasticity {
     problem_out.write_table_tex();
 
 
-    for (double z = 0.1; z <= 1; z += 0.3) {
+    for (double z = 0.1; z <= 1; z += 0.1) {
       GridPartialOut::get_cross_section(&tria, 2, z, true, 
                         problem_out.cross_sections_z.string() 
                         + "l" 
@@ -997,7 +1022,7 @@ namespace Linear_Elasticity {
                         + std::to_string(level) 
                         + "_parametric");
     }
-    for (double y = 0.1; y <= 1; y += 0.3) {
+    for (double y = 0.1; y <= 1; y += 0.1) {
       GridPartialOut::get_cross_section(&tria, 1, y, true, 
                         problem_out.cross_sections_y.string() 
                         + "l" 
@@ -1009,7 +1034,7 @@ namespace Linear_Elasticity {
                         + std::to_string(level) 
                         + "_parametric");
     }
-    for (double x = 0.1; x <= 1; x += 0.3) {
+    for (double x = 0.1; x <= 1; x += 0.1) {
       GridPartialOut::get_cross_section(&tria, 0, x, true, 
                         problem_out.cross_sections_x.string() 
                         + "l" 

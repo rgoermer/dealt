@@ -39,6 +39,26 @@
 #include <utility>
 
 namespace Linear_Elasticity {
+  template<int dim>
+  class InhomogeneousPostprocessor : public DataPostprocessor<dim> {
+    private: 
+
+
+    public:
+    InhomogeneousPostprocessor(); 
+
+    virtual void evaluate_vector_field (
+      const DataPostprocessorInputs::Vector<2>  &inputs, 
+            std::vector< Vector<double> >       &outputs
+    ) const override;
+
+    virtual std::vector< std::string > get_names(
+    ) const override;
+
+    UpdateFlags get_needed_update_flags(
+    ) const override;
+  };
+
   template<int dim> 
   class InhomogeneousProblem_SOL : public Elasticity_SOL<dim> {
   public: 
