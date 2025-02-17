@@ -71,22 +71,26 @@ else
 end
 
 for i = 1:length(C)
-    f = figure(fig_no); fig_no = fig_no + 1; hold on;
+    figure(fig_no); hold on;
     % f.WindowStyle = 'docked';
-    plot_data(C{i}, path, problem_dim, space_dim);
+    f_arr = plot_data(C{i}, path, problem_dim, space_dim);
+    fig_no = fig_no + length(f_arr);
     if ~isempty(out_path)
-        print_figure(f, out_path, C{i})
-    else
-        h = axes(f, 'visible', 'off');
-        title(h, C{i}, 'FontSize', 50)
-        % colorbar
+        if length(f_arr) == 1
+            print_figure(f_arr, out_path, C{i});
+        else 
+            argument = C{i};
+            for j = 1:length(f_arr)
+                print_figure(f_arr(j), out_path, [argument '_sp' num2str(j)]);
+            end
+        end
     end
 end
 
 
 end % main
 
-function plot_data(c, path, problem_dim, space_dim)
+function [fig] = plot_data(c, path, problem_dim, space_dim)
 
 % Load a proper colormap
 cmap = load('smooth-cool-warm.dat') / 255;
@@ -99,6 +103,9 @@ switch space_dim
     case 3
         N1 = 50; N2 = 25; N3 = 10;
 end
+
+fig = gcf; 
+fig_no = fig.Number;
 
 lw = 2;
 switch c
@@ -228,16 +235,17 @@ switch c
                 return;
         end     
         
+        Omega_f = [path '_physical_grid.dat'];
         switch problem_dim
             case 1
                 B_f = [path  '_splines.dat'];
                 B = load(B_f);
-                N3 = 10; 
                 ut = reshape(B * uh', N1, N2, N3);
                 
                 ax = findobj(gcf, 'type', 'axes');
-                plot_solution(Phi, ut, N1, N2, N3, ax);
-            case 2
+                plot_solution(Phi, ut, N1, N2, N3, ax); hold on;
+                loadGrid(load(Omega_f), 'Color', [0 0 0], 'LineWidth', lw); hold off;
+            case 2                
                 B_fx = [path  '_d0_splines.dat'];
                 B_fy = [path  '_d1_splines.dat'];
                 Bx = load(B_fx);
@@ -246,13 +254,18 @@ switch c
                 utx = reshape(Bx * uh', N1, N2, N3);
                 uty = reshape(By * uh', N1, N2, N3);
                 
-                ax = subplot(2, 1, 1);
-                plot_solution(Phi, utx, N1, N2, N3, ax);
+                sp = figure(fig_no);
+                plot_solution(Phi, utx, N1, N2, N3, sp.CurrentAxes); hold on;
+                loadGrid(load(Omega_f), 'Color', [0 0 0], 'LineWidth', lw); hold off;
+                colorbar
                 
-                ax = subplot(2, 1, 2);
-                plot_solution(Phi, uty, N1, N2, N3, ax);
+                sp = figure(fig_no+1); hold on;
+                plot_solution(Phi, uty, N1, N2, N3, sp.CurrentAxes); hold on;
+                loadGrid(load(Omega_f), 'Color', [0 0 0], 'LineWidth', lw); hold off;
+                colorbar
+                fig = [fig, sp];
             case 3
-                B_fx = [path  '_d0_splines.dat']; N3 = 20;
+                B_fx = [path  '_d0_splines.dat']; 
                 B_fy = [path  '_d1_splines.dat'];
                 B_fz = [path  '_d2_splines.dat'];
                 Bx = load(B_fx);
@@ -263,21 +276,29 @@ switch c
                 uty = reshape(By * uh', N1, N2, N3);
                 utz = reshape(Bz * uh', N1, N2, N3);
                 
-                minColorLimit = min([min(min(min(utx))) min(min(min(uty))) min(min(min(utz))) ]);
-                maxColorLimit = max([max(max(max(utx))) max(max(max(uty))) max(max(max(utz))) ]);
+                minColorLimit = [min(min(min(utx))) min(min(min(uty))) min(min(min(utz))) ];
+                maxColorLimit = [max(max(max(utx))) max(max(max(uty))) max(max(max(utz))) ];
 
-                sp1 = subplot(3, 1, 1, 'Parent', gcf);
-                plot_solution(Phi, utx, N1, N2, N3, sp1);
-                title('$$\mathbf{u}_x$$', 'Interpreter', 'latex', 'FontSize', 25);
+                sp = figure(fig_no);
+                plot_solution(Phi, utx, N1, N2, N3, sp.CurrentAxes); hold on;
+                loadGrid(load(Omega_f), 'Color', [0 0 0], 'LineWidth', lw); hold off;
+                colorbar;
+                caxis(sp.CurrentAxes, [minColorLimit(1), maxColorLimit(1)]);
                 
-                sp2 = subplot(3, 1, 2, 'Parent', gcf);
-                plot_solution(Phi, uty, N1, N2, N3, sp2);
-                title('$$\mathbf{u}_y$$', 'Interpreter', 'latex', 'FontSize', 25);
+                sp = figure(fig_no+1); hold on;
+                plot_solution(Phi, uty, N1, N2, N3, sp.CurrentAxes); hold on;
+                loadGrid(load(Omega_f), 'Color', [0 0 0], 'LineWidth', lw); hold off;
+                colorbar
+                caxis(sp.CurrentAxes, [minColorLimit(2), maxColorLimit(2)]);
+                fig = [fig, sp];
                 
                 
-                sp3 = subplot(3, 1, 3, 'Parent', gcf);
-                plot_solution(Phi, utz, N1, N2, N3, sp3) %, minColorLimit, maxColorLimit);
-                title('$$\mathbf{u}_z$$', 'Interpreter', 'latex', 'FontSize', 25);
+                sp = figure(fig_no+2); hold on;
+                plot_solution(Phi, utz, N1, N2, N3, sp.CurrentAxes); hold on; %, minColorLimit, maxColorLimit);
+                loadGrid(load(Omega_f), 'Color', [0 0 0], 'LineWidth', lw); hold off;
+                colorbar;
+                caxis(sp.CurrentAxes, [minColorLimit(3), maxColorLimit(3)]);
+                fig = [fig, sp];
 
 %                 h = axes(gcf, 'visible', 'off');
 %                 c = colorbar(h, 'Position', [0.96 0.168 0.012 0.7]);
@@ -373,10 +394,39 @@ Phix = reshape(Phi(:, 1), N1, N2, N3);
 Phiy = reshape(Phi(:, 2), N1, N2, N3); 
 if space_dimension == 3
     Phiz = reshape(Phi(:, 3), N1, N2, N3);
-    for z = 1:N3
+    for z = 1:3:N3
         surf(ax, Phix(:, :, z), Phiy(:, :, z), Phiz(:, :, z), u(:, :, z), 'EdgeColor', 'none'); hold on;
     end
     colorbar;
+%     view([1 1 1]);
+    
+    % z0
+    X1 = Phix(:, :, 1); Xend = Phix(:, :, end);
+    Y1 = Phiy(:, :, 1); Yend = Phiy(:, :, end);
+    Z1 = Phiz(:, :, 1); Zend = Phiz(:, :, end);
+    sol1 = u(:, :, 1); solend = u(:, :, end);
+    
+    surf(ax, X1, Y1, Z1, sol1, 'EdgeColor', 'none'); hold on;
+    surf(ax, Xend, Yend, Zend, solend, 'EdgeColor', 'none'); hold on;
+    
+    [N1, ~, N3] = size(Phix(:, 1, :));
+    X1 = reshape(Phix(:, 1, :), N1, N3); Xend = reshape(Phix(:, end, :), N1, N3);
+    Y1 = reshape(Phiy(:, 1, :), N1, N3); Yend = reshape(Phiy(:, end, :), N1, N3);
+    Z1 = reshape(Phiz(:, 1, :), N1, N3); Zend = reshape(Phiz(:, end, :), N1, N3);
+    sol1 = reshape(u(:, 1, :), N1, N3); solend = reshape(u(:, end, :), N1, N3);
+
+    surf(ax, X1, Y1, Z1, sol1, 'EdgeColor', 'none'); hold on;
+    surf(ax, Xend, Yend, Zend, solend, 'EdgeColor', 'none'); hold on;
+    
+    [~, N2, N3] = size(Phix(1, :, :));
+    X1 = reshape(Phix(1, :, :), N2, N3); Xend = reshape(Phix(end, :, :), N2, N3);
+    Y1 = reshape(Phiy(1, :, :), N2, N3); Yend = reshape(Phiy(end, :, :), N2, N3);
+    Z1 = reshape(Phiz(1, :, :), N2, N3); Zend = reshape(Phiz(end, :, :), N2, N3);
+    sol1 = reshape(u(1, :, :), N2, N3); solend = reshape(u(end, :, :), N2, N3);
+
+    surf(ax, X1, Y1, Z1, sol1, 'EdgeColor', 'none'); hold on;
+    surf(ax, Xend, Yend, Zend, solend, 'EdgeColor', 'none'); hold on;
+    
     view([1 1 1]);
 else 
     contourf(ax, Phix, Phiy, u, 'EdgeColor', 'none'); hold on;
@@ -476,8 +526,12 @@ switch name
     otherwise
         xi = true;
 end % switch
+if contains(name, 'solution')
+    xi = false;
+end
 
 fs = 50;
+set(gca, 'FontSize', fs/2);
 if ~strcmp(name, 'sparsity_pattern')
     if xi
         xlabel('$$\xi_x$$', ...
@@ -485,6 +539,10 @@ if ~strcmp(name, 'sparsity_pattern')
             'Interpreter', 'latex',...
             'Color', 'black')
         ylabel('$$\xi_y$$', ...
+            'Fontsize', fs, ...
+            'Interpreter', 'latex',...
+            'Color', 'black')
+        zlabel('$$\xi_z$$', ...
             'Fontsize', fs, ...
             'Interpreter', 'latex',...
             'Color', 'black')
@@ -497,24 +555,29 @@ if ~strcmp(name, 'sparsity_pattern')
             'Fontsize', fs, ...
             'Interpreter', 'latex',...
             'Color', 'black')
+        zlabel('$$z$$', ...
+            'Fontsize', fs, ...
+            'Interpreter', 'latex',...
+            'Color', 'black')
     end
-else
-    set(gca, 'FontSize', fs/2);
 end
 
-set(gca, 'XTickLabel', []);
-set(gca, 'YTickLabel', []);
-set(gca, 'xtick', []);
-set(gca, 'ytick', []);
+set(gca, 'XTickLabel', {0, 1});
+set(gca, 'YTickLabel', {0, 1});
+set(gca, 'ZTickLabel', {0, 1});
+set(gca, 'xtick', [0, 1]);
+set(gca, 'ytick', [0, 1]);
+set(gca, 'ztick', [0, 1]);
 
 
 % Set position of figure
-if ~strcmp(name, 'sparsity_pattern')
-    % 	fig.Position = [2792 101 996 1073];
-    fig.Position = [644 2 1665 1306];
-else
-    fig.Position = [577 239 1064 864];
-end
+% if ~strcmp(name, 'sparsity_pattern')
+%     % 	fig.Position = [2792 101 996 1073];
+%     fig.Position = [644 2 1665 1306];
+% else
+%     fig.Position = [577 239 1064 864];
+% end
+fig.Position = [1000 200 3*560 3*420];
 
 % Get figure as matrix
 frame        = getframe(fig);

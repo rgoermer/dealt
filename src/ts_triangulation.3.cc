@@ -267,6 +267,14 @@ namespace dealt {
   template<int spacedim>
   void TS_Triangulation<3, spacedim>::find_bezier_elements(
   ) {
+    int level = this->n_levels() - 1;
+    this->bezier_elements = {}; 
+    for (const auto& cell : this -> active_cell_iterators()) 
+      if (cell -> level() < level)
+        this->bezier_elements.push_back(cell);
+
+    return;
+
     // get some references from the base class
     const unsigned int                          nfc             = GeometryInfo<dimension>::faces_per_cell;
     const std::vector<unsigned int>&            p               = this->p;

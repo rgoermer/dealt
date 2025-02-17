@@ -3,6 +3,7 @@
 
 
 #include <memory>
+#include <chrono>
 
 #include <utilities.h>
 #include <get_cross_section.h>
@@ -43,6 +44,11 @@
 
 using namespace dealt; 
 namespace Poisson_Benchmark {
+  using std::chrono::high_resolution_clock;
+  using std::chrono::duration_cast;
+  using std::chrono::duration;
+  using std::chrono::milliseconds;
+
   class Poisson_Benchmark_3D {
   enum Boundary_IDs {
     Dirichlet, 
@@ -65,6 +71,7 @@ namespace Poisson_Benchmark {
     double                  residual = 1;
     double                  max_residual = 1;
     OutputSetup             problem_out; 
+
     
 
     Functions::ConstantFunction<3>     rhs_fcn;

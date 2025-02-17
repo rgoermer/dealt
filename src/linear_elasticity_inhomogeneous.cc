@@ -943,14 +943,10 @@ namespace Linear_Elasticity {
     // GridTools::transform(...) does not work with anisotropically refined meshes in 3D
     // Thus, we perform the transformation manually ... *sigh*
     const IsoparametricManifold<3> geometry(tria.get_IPF()); 
-
-    std::vector<bool> treated_vertices(tria.n_vertices(), false);
-    for (const auto& cell : physical_grid.active_cell_iterators())
-      for (const unsigned int v : cell->vertex_indices())
-        if (treated_vertices[cell->vertex_index(v)] == false) {
-          cell->vertex(v) = geometry.push_forward(cell->vertex(v));
-          treated_vertices[cell->vertex_index(v)] = true;
-        }
+    GridTools::transform(
+      [&geometry](const Point<3>& p){ return geometry.push_forward(p);},
+      physical_grid
+    );
 
 
     // Generate the output object
@@ -972,29 +968,12 @@ namespace Linear_Elasticity {
         residuals
     );
 
-    Vector<int> levels (tria.n_active_cells());
+    Vector<double> levels (tria.n_active_cells());
     auto cell = tria.begin_active();
     for (unsigned int n = 0; n < tria.n_active_cells(); n++){
       levels(n) = cell->level();
       cell++;
     }
-
-    // Compute the solution vector in terms of Bernstein polynomials
-          DoFHandler<3>     dof_handler(physical_grid);
-    const FESystem<3>       fe(FE_Bernstein<3>(data.max_degree+order)^3);
-    dof_handler.distribute_dofs(fe);
-
-    Vector<double>    bernstein_solution(dof_handler.n_dofs()); 
-    unsigned int n = 0; 
-    for (const auto& cell : tria.active_cell_iterators()){
-      const auto& IEN = tria.get_IEN_array(cell, 3);
-      const auto& BE  = tria.get_bezier_coefficients(cell);
-
-      
-    }
-
-
-
 
     data_out.add_data_vector(residuals, "cell_errors");
     data_out.add_data_vector(levels, "levels");
@@ -1108,6 +1087,9 @@ namespace Linear_Elasticity {
     E.print_formatted(out_e, 16, true, 1, "0");
 
     tria.printIPF(3, evals, level_name, 16, true, true);
+    tria.coarsen_bezier_elements();
+    tria.print_IPF_wireframe(level_name);
+    tria.refine_bezier_elements();
   } // InhomogeneousProblem<3>::output_system()
 
   template<>

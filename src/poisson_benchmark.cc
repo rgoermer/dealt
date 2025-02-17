@@ -34,6 +34,7 @@ namespace Poisson_Benchmark {
 
     tria.set_boundary_dofs(); 
     tria.prepare_assembly();
+
   } // Poisson_Benchmark_3D
 
   void Poisson_Benchmark_3D::run(
@@ -276,13 +277,43 @@ namespace Poisson_Benchmark {
     DataOut<3> data_out;
     data_out.attach_triangulation(physical_grid); 
 
+    // Estimate the error on each cell
+    Vector< double > residuals(tria.n_active_cells());
+    std::vector<unsigned int> degrees = tria.get_degree();
+    for (unsigned int p : degrees)
+      p = p * p + 1;
+
+    const Functions::ConstantFunction<3> a(1.);
+    const std::map< 
+              types::boundary_id, 
+        const Function<3>* 
+      > neumann_bc = {{Boundary_IDs::Neumann, &nc_fcn}};
+    tria.poisson_residual_error_estimate(
+        degrees,
+        &rhs_fcn, 
+        &eps_fcn, 
+        &a, 
+        neumann_bc,
+        solution,
+        residuals
+    );
+
+    Vector<double> levels (tria.n_active_cells());
+    auto cell = tria.begin_active();
+    for (unsigned int n = 0; n < tria.n_active_cells(); n++){
+      levels(n) = cell->level();
+      cell++;
+    }
+
+    data_out.add_data_vector(residuals, "cell_errors");
+    data_out.add_data_vector(levels, "levels");
+
     // Build patches
     data_out.build_patches(); 
 
     // Open a file
     std::ofstream vtk_out(name_vtg); 
     data_out.write_vtk(vtk_out);
-
 
     problem_out.add_values_to_table(max_residual, residual);
 
@@ -371,6 +402,9 @@ namespace Poisson_Benchmark {
     E.print_formatted(out_e, 16, true, 1, "0");
 
     tria.printIPF(evals, level_name, 16, true, true);
+    tria.coarsen_bezier_elements();
+    tria.print_IPF_wireframe(level_name);
+    tria.refine_bezier_elements();
   } // Poisson_Benchmark_3D::output_system()
 
 

@@ -63,26 +63,32 @@ end
 
 %% Linear Elasticity
 
-o = 2; l = 10; dim = 2;
-out_path = './img_out/linear_elasticity_inhomogeneous';
-data = {'physical_grid'};
+l = 10; dim = 2;
+% data = {'physical_grid'};
 problem = ['../out/linear_elasticity_inhomogeneous/' num2str(dim) 'd/'];
-load_problem(data, problem, out_path, o, l, 2, dim)
-%% 
+% for o = 2:6
+%     out_path = ['./img_out/linear_elasticity_inhomogeneous_2d_o' num2str(o) '_'];
+%     load_problem(data, problem, out_path, o, l, o, dim)
+% end
 
+data = {'solution'};
+o = 2; 
+out_path = ['./img_out/linear_elasticity_inhomogeneous_2d_o' num2str(o) '_'];
+load_problem(data, problem, out_path, o, l, 1, dim);
 
 data = {'displacement', 'control_grid', 'real_solution'};
 load_standard_problem(data, '', out_path, 0, 0, 2, dim)
 
-%% Inhomogeneous Linear elasticity
-o = 2; l = 0; dim = 3; 
+
+
+%% Inhomogeneous Linear elasticity 3D
+o = 2; l = 5; dim = 3; 
 % out_path = ['./img_out/linear_elasticity_inhomogeneous/' num2str(dim) 'd/o' num2str(o) '_'];
-out_path = '';
 data = {'solution'};
 problem = ['../out/linear_elasticity_inhomogeneous/' num2str(dim) 'd/'];
-for l = 0:3:9
-    load_problem(data, problem, out_path, o, l, l+1, dim);
-end
+
+out_path = ['img_out/lin_elast_3d_o' num2str(o) '_l' num2str(l) '_'];
+load_problem(data, problem, out_path, o, l, 1, dim);
 
 %% LShape domain
 
@@ -93,8 +99,12 @@ problem = '../out/lshape/lshape_ac/';
 load_problem(data, problem, out_path, o, l, 1);
 
 
-
-
+%% Poisson 3D
+o = 2; l = 15; dim = 3; 
+out_path = './img_out/poisson_benchmark_3d_';
+data = {'solution'};
+problem = '../out/poisson_benchmark_3d/';
+load_problem(data, problem, out_path, o, l, 1, 1, dim);
 
 
 

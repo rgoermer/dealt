@@ -733,7 +733,6 @@ namespace dealt {
         const Point<space_dimension>& Q = ts_values.quadrature_point(q_index);
         const Tensor<1, space_dimension>& sigma_grad = sigma -> gradient(Q);
         const double sigma_val = sigma -> value(Q);
-        const double a_val     = a -> value(Q);
         for (const unsigned int i : ts_values.dof_indices() ){
           double l = 0;
           for (unsigned int d = 0; d < space_dimension; d++)
@@ -743,8 +742,10 @@ namespace dealt {
           gsgu  += solution(local_dof_indices[i]) *
                       sigma_grad *
                       ts_values.shape_grad(i, q_index);
-          au    += solution(local_dof_indices[i]) * a_val;
+          au    += solution(local_dof_indices[i]) *
+                    ts_values.shape_value(i, q_index);
         } // for ( i )
+        au *= a -> value(Q);
 
         double g = (slu + gsgu - au + rhs_fcn -> value(Q));
         local_residual += g * g * ts_values.JxW(q_index);
@@ -908,8 +909,10 @@ namespace dealt {
             l += ts_values.shape_hessian(i, q_index)[d][d];
 
           slu   += solution(local_dof_indices[i]) * sigma_val * l;
-          au    += solution(local_dof_indices[i]) * a_val;
+          au    += solution(local_dof_indices[i]) * 
+                    ts_values.shape_value(i, q_index);
         } // for ( i )
+        au *= a_val;
 
         double g = (slu - au + rhs_fcn -> value(Q));
         local_residual += g * g * ts_values.JxW(q_index);
@@ -1078,8 +1081,10 @@ namespace dealt {
           gsgu  += solution(local_dof_indices[i]) *
                       sigma_grad *
                       ts_values.shape_grad(i, q_index);
-          au    += solution(local_dof_indices[i]) * a_val;
+          au    += solution(local_dof_indices[i]) * 
+                    ts_values.shape_value(i, q_index);
         } // for ( i )
+        au *= a_val;
 
         double g = (slu + gsgu - au + rhs_fcn -> value(Q));
         local_residual += g * g * ts_values.JxW(q_index);
@@ -1243,8 +1248,10 @@ namespace dealt {
             l += ts_values.shape_hessian(i, q_index)[d][d];
 
           slu   += solution(local_dof_indices[i]) * sigma_val * l;
-          au    += solution(local_dof_indices[i]) * a_val;
+          au    += solution(local_dof_indices[i]) * 
+                    ts_values.shape_value(i, q_index);
         } // for ( i )
+        au *= a_val;
 
         double g = (slu - au + rhs_fcn -> value(Q));
         local_residual += g * g * ts_values.JxW(q_index);
@@ -2204,7 +2211,10 @@ namespace dealt {
 #endif
     const unsigned int &nfc = GeometryInfo<dimension>::faces_per_cell;
     const unsigned int &nvf = GeometryInfo<dimension>::vertices_per_face;
+    const unsigned int &nvc = GeometryInfo<dimension>::vertices_per_cell;
     const unsigned int &n_components = space_dimension;
+
+    const auto& geometry = this->get_IPF();
                 
     TSValues<dimension, space_dimension, space_dimension> ts_values(
       this, n_gauss_points,
@@ -2226,18 +2236,13 @@ namespace dealt {
       cell_residual = 0.;
       const std::vector< unsigned int > local_IEN_array
         = get_IEN_array(cell, n_components);
-      ts_values.reinit(cell); 
+      ts_values.reinit(cell);
       
-      Tensor<1, space_dimension>    div_c_u;
-      for (const unsigned int q : ts_values.quadrature_point_indices()){
-        Tensor<1, space_dimension> 
-              tmp1, // \nabla \lambda (\nabla \cdot u)
-              tmp2, // (\nabla \cdot mu + \mu(\nabla \cdot \nabla)) u
-              tmp3; // \nabla \cdot \mu (nabla u)^T
-        const Point<space_dimension>  Q = ts_values.quadrature_point(q);
+      for (const unsigned int q : ts_values.quadrature_point_indices()) {
+        Tensor<1, space_dimension>    integrand;
+        const Point<space_dimension>& Q        = ts_values.quadrature_point(q);
         const double                  lambda_q = lambda_ptr -> value(Q);
-        const double                  mu_q = mu_ptr -> value(Q);
-
+        const double                  mu_q     = mu_ptr     -> value(Q);
         for (const unsigned int i : ts_values.dof_indices()) {
           const double c_i = solution(local_IEN_array[i]);
           const Tensor<2, space_dimension>& hess = 
@@ -2245,25 +2250,21 @@ namespace dealt {
           const unsigned int comp_i = 
             ts_values.system_to_component_index(i).first;
 
-          // \lambda \nabla (\nabla \cdot u)
-          tmp1 += c_i * lambda_q * hess[comp_i];
-
-          // \mu (\nabla \cdot \nabla u)
-          for (unsigned int d = 0; d < space_dimension; d++) 
-            tmp2[comp_i] += mu_q * hess[d][d];
-
-          // \mu \nabla \cdot (\nabla u)^T
-          tmp3 += c_i * mu_q * hess[comp_i];
+          for (unsigned int d = 0; d < space_dimension; d++) {
+            integrand[d]      += c_i * (lambda_q + mu_q)  *
+                                        hess[comp_i][d];  // \lambda \nabla (\nabla \cdot u)
+            integrand[comp_i] += c_i * mu_q * hess[d][d]; // \mu (\nabla \cdot \nabla u)
+          }
         } // for ( i )
 
-        Tensor<1, space_dimension> integrand =
-                tmp1 + tmp2 + tmp3;
         for (unsigned int d = 0; d < space_dimension; d++)
           integrand[d] += rhs_fcn -> value(Q, d);
 
         cell_residual += integrand * integrand * ts_values.JxW(q);
       } // for ( q )
-      cell_residual *= cell -> diameter() * cell -> diameter();
+      const double cell_width = (geometry.point_value(cell->vertex(0))).distance(
+                                 geometry.point_value(cell->vertex(nvc - 1)));
+      cell_residual *= cell_width * cell_width / 24.;
 
       for (unsigned int f = 0; f < nfc; f++){
         double face_residuals = 0.;
@@ -2282,15 +2283,15 @@ namespace dealt {
           for (const unsigned int q : face_values.quadrature_point_indices()){
             const Point<space_dimension>     &Q      = face_values.quadrature_point(q);
                   Tensor<2, space_dimension>  function_jacobian;
-                  SymmetricTensor<2, space_dimension> stress;
-                  Tensor<2, space_dimension>  strain;
-                  Tensor<1, space_dimension>  normal_dot_strain;
+                  SymmetricTensor<2, space_dimension> strain;
+                  Tensor<2, space_dimension>  stress;
+                  Tensor<1, space_dimension>  normal_dot_stress;
             const double                lambda_q = lambda_ptr -> value(Q);
             const double                mu_q = mu_ptr -> value(Q);
 
             // Initialize normal_dot_strain with rhs
             for (unsigned int d = 0; d < space_dimension; d++)
-              normal_dot_strain[d] = bdry_fcn -> value(Q, d);
+              normal_dot_stress[d] = bdry_fcn -> value(Q, d);
             
             // Initialize the strain tensor
             for (const unsigned int dof : face_values.dof_indices()) {
@@ -2301,28 +2302,30 @@ namespace dealt {
             } // for ( i )
 
             // Get the stress tensor from the jacobian
-            stress = symmetrize(function_jacobian);
+            strain = symmetrize(function_jacobian);
             for (unsigned int i = 0; i < space_dimension; i++) {
               for (unsigned int j = 0; j < space_dimension; j++) {
                 for (unsigned int k = 0; k < space_dimension; k++) {
                   for (unsigned int l = 0; l < space_dimension; l++) {
                     if (i == j && k == l)
-                      strain[i][j] += lambda_q * stress[k][l];
+                      stress[i][j] += lambda_q * strain[k][l];
                     if (i == k && j == l)
-                      strain[i][j] += mu_q * stress[k][l];
+                      stress[i][j] += mu_q * strain[k][l];
                     if (i == l && j == k)
-                      strain[i][j] += mu_q * stress[k][l];
+                      stress[i][j] += mu_q * strain[k][l];
                   } // for ( l )
                 } // for ( k )
               } // for ( j )
             } // for ( i )
 
             for (unsigned int d = 0; d < space_dimension; d++)
-              normal_dot_strain[d] -= strain[d] * face_values.normal_vector(q);
+              normal_dot_stress[d] -= stress[d] * face_values.normal_vector(q);
 
-            face_residuals += normal_dot_strain * normal_dot_strain * face_values.JxW(q);
+            face_residuals += normal_dot_stress * normal_dot_stress * face_values.JxW(q);
           } // for ( q )
-          cell_residual += face_residuals * face -> diameter();
+          const double face_width = (geometry.point_value(face->vertex(0))).distance(
+                                      geometry.point_value(face->vertex(GeometryInfo<dim>::vertices_per_face-1)));
+          cell_residual += face_residuals * face_width / 24.;
         } else {
           // In this case, we have to check the multiplicty of thecurrent face
           // to check whether this is a C0 edge or not. 
@@ -2843,7 +2846,8 @@ namespace dealt {
     for (const auto& cell : this -> active_cell_iterators())
       for (unsigned int n = 0; n < nlc; n++)
         if ( cell -> line(n) -> used() )
-          lines.push_back(cell -> line(n));
+          if (dimension == 2 || cell->line(n)->at_boundary())
+            lines.push_back(cell -> line(n));
 
     const unsigned int n_lines = lines.size();
           unsigned int n = 0;
@@ -3488,8 +3492,6 @@ namespace dealt {
     // Setup new mof map for refined grid
     this -> setup_mof();
 
-    // Prepare the grid to switch between T-mesh and Beyier mesh
-    this -> find_bezier_elements();
 
 #ifdef DEBUG
   std::cout << indent(2) << "... done!" << std::endl;
@@ -3931,6 +3933,9 @@ namespace dealt {
     for(const auto& cell : this->active_cell_iterators())
       Assert(!(cell->refine_flag_set()), ExcMessage("Before calling refine_bezier_elements(), make sure no other cell is marked for refinement."));
 #endif
+
+    // Prepare the grid to switch between T-mesh and Beyier mesh
+    this -> find_bezier_elements();
     
     typename
     std::vector< cell_iterator >::iterator it_bezier = bezier_elements.begin();

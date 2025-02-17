@@ -40,12 +40,83 @@ namespace Poisson_Neumann {
     //         (c(1) == 0 || c(1) == 1 ) )
         face -> set_boundary_id(Boundary::Dirichlet);
     }
-  
-    tria.set_boundary_dofs();
-  
-    tria.refine_bezier_elements();
-    tria.compute_extraction_operators();
+    run_times.set_auto_fill_mode(true);
 
+    run_times.declare_column("Level");
+
+    run_times.declare_column("Lin. Solve");   // Done
+    run_times.declare_column("Assembly");     // Done
+    run_times.add_column_to_supercolumn("Lin. Solve", "Solve");
+    run_times.add_column_to_supercolumn("Assembly",   "Solve");
+    
+
+    run_times.declare_column("Estimate");             // Done 
+
+    run_times.declare_column("Mark and Refine");      // Done
+    run_times.declare_column("Set Boundary DoFs");    // Done
+    run_times.declare_column("Refine Bezier");        // Done
+    run_times.declare_column("Extraction Operators"); // Done
+
+    run_times.add_column_to_supercolumn("Set Boundary DoFs",    "Refine");
+    run_times.add_column_to_supercolumn("Refine Bezier",        "Refine");
+    run_times.add_column_to_supercolumn("Extraction Operators", "Refine");
+    run_times.add_column_to_supercolumn("Mark and Refine",      "Refine");
+
+    prepare_assembly_and_measure_time();
+   }
+
+  void Poisson_Benchmark::prepare_assembly_and_measure_time(
+  ) {
+    auto t_set_boundary_dofs_start = high_resolution_clock::now();
+    tria.set_boundary_dofs();
+    auto t_set_boundary_dofs_end   = high_resolution_clock::now();
+
+    auto t_refine_bezier_elements_start = high_resolution_clock::now();
+    tria.refine_bezier_elements();
+    auto t_refine_bezier_elements_end   = high_resolution_clock::now();
+
+    auto t_compute_extraction_operators_start = high_resolution_clock ::now();
+    tria.compute_extraction_operators();
+    auto t_compute_extraction_operators_end   = high_resolution_clock::now();
+
+    duration<double> t_boundary_dofs = 
+            t_set_boundary_dofs_end - t_set_boundary_dofs_start;
+    duration<double> t_refine_bezier_elements = 
+            t_refine_bezier_elements_end - t_refine_bezier_elements_start;
+    duration<double> t_compute_extraction_operators = 
+            t_compute_extraction_operators_end - t_compute_extraction_operators_start;
+
+    run_times.add_value(
+        "Set Boundary DoFs",
+        convert_time(t_boundary_dofs)
+    );
+    run_times.add_value(
+        "Refine Bezier",
+        convert_time(t_refine_bezier_elements)
+    );
+    run_times.add_value(
+        "Extraction Operators",
+        convert_time(t_compute_extraction_operators)
+    );
+    run_times.add_value("Level", tria.n_levels()-1);
+  } // Poisson_Benchmark::prepare_assembly_and_measure_time();
+
+  const std::string Poisson_Benchmark::convert_time(
+    const std::chrono::duration<double>& time
+  ) const {
+    std::string out;
+    // time is given in seconds! 
+    if (time < std::chrono::seconds(1)) {
+      out = std::to_string(duration_cast<std::chrono::milliseconds>(time).count()) + "ms";
+    } else if (time < std::chrono::minutes(1)) {
+      out = std::to_string(time.count()) + "s";
+    } else if (time < std::chrono::hours(1)){
+      out = std::to_string(duration_cast<std::chrono::minutes>(time).count()) + "m";
+    } else {
+      out = std::to_string(duration_cast<std::chrono::hours>(time).count()) + "h";
+    }
+
+    return out; 
   }
   
   
@@ -86,24 +157,26 @@ namespace Poisson_Neumann {
   
   }
   
-  void Poisson_Benchmark::assemble_system(){
-    if (tria.n_levels() - 1 < 16) {
-      std::string name = problem_out.svg.string() + "step0_bezier_grid_l"
-                            + std::to_string(tria.n_levels() - 1)
-                            + ".svg";  
+  void Poisson_Benchmark::assemble_system(
+  ) {
+    auto t_assemble_system_start = high_resolution_clock::now();
+    // if (tria.n_levels() - 1 < 16) {
+    //   std::string name = problem_out.svg.string() + "step0_bezier_grid_l"
+    //                         + std::to_string(tria.n_levels() - 1)
+    //                         + ".svg";  
 
-      GridOutFlags::Svg svg_flags;
-      svg_flags.coloring = GridOutFlags::Svg::Coloring::none;
-      // svg_flags.label_level_number  = true;
-      // svg_flags.label_cell_index    = true;
-      // svg_flags.label_boundary_id   = true;
+    //   GridOutFlags::Svg svg_flags;
+    //   svg_flags.coloring = GridOutFlags::Svg::Coloring::none;
+    //   // svg_flags.label_level_number  = true;
+    //   // svg_flags.label_cell_index    = true;
+    //   // svg_flags.label_boundary_id   = true;
 
-      std::ofstream out(name);
-      GridOut       grid_out;
-      grid_out.set_flags(svg_flags);
+    //   std::ofstream out(name);
+    //   GridOut       grid_out;
+    //   grid_out.set_flags(svg_flags);
   
-      grid_out.write_svg(tria, out);
-    }
+    //   grid_out.write_svg(tria, out);
+    // }
   
     std::cout << "Assembling system matrix ... " << std::endl;
   
@@ -212,14 +285,14 @@ namespace Poisson_Neumann {
       boundary_values
     );
 
-    std::cout << "Boundary dofs by face: " << std::endl;
-    const auto& boundary_dofs = tria.get_boundary_dofs();
-    const auto& splines = tria.get_splines(); 
-    for (const auto& dof : boundary_dofs.at(Boundary::Dirichlet)){
-      const auto& ts = splines.at(dof); 
-      const auto& anchor = ts -> get_anchor();
-      std::cout << dof << ": " << 0.5 * anchor.first + 0.5*anchor.second << ", val = " << boundary_values.at(dof) << std::endl;
-    } // for ( dof )
+    // std::cout << "Boundary dofs by face: " << std::endl;
+    // const auto& boundary_dofs = tria.get_boundary_dofs();
+    // const auto& splines = tria.get_splines(); 
+    // for (const auto& dof : boundary_dofs.at(Boundary::Dirichlet)){
+    //   const auto& ts = splines.at(dof); 
+    //   const auto& anchor = ts -> get_anchor();
+    //   std::cout << dof << ": " << 0.5 * anchor.first + 0.5*anchor.second << ", val = " << boundary_values.at(dof) << std::endl;
+    // } // for ( dof )
 
     MatrixTools::apply_boundary_values(
       boundary_values, 
@@ -229,7 +302,15 @@ namespace Poisson_Neumann {
     );
   
   
-    std::cout << " ... done!" << std::endl;
+    // std::cout << " ... done!" << std::endl;
+    auto t_assemble_system_end = high_resolution_clock::now();
+    duration<double> t_assemble_system = 
+            t_assemble_system_end - t_assemble_system_start;
+
+    run_times.add_value(
+        "Assembly",
+        convert_time(t_assemble_system)
+    );
   }
   
   void Poisson_Benchmark::output_system()
@@ -379,6 +460,7 @@ namespace Poisson_Neumann {
   void Poisson_Benchmark::solve(){
     std::cout << "Solving system ... " << std::endl;
 
+    auto t_solve_start = high_resolution_clock::now();
     SolverControl            solver_control(750 * tria.n_active_splines(), H1 * 1e-4);
     SolverCG<Vector<double>> solver(solver_control);
     // dealii::TrilinosWrappers::SolverCG solver(solver_control);
@@ -390,6 +472,14 @@ namespace Poisson_Neumann {
     // preconditioner.initialize(system_matrix);
 
     solver.solve(system_matrix, solution, system_rhs, preconditioner);
+    auto t_solve_end = high_resolution_clock::now();
+
+    duration<double> t_solve = 
+            t_solve_end - t_solve_start; 
+    run_times.add_value(
+       "Lin. Solve",
+       convert_time(t_solve)
+    );
 
     problem_out.add_values_to_table(
       tria.n_levels() - 1,
@@ -475,6 +565,7 @@ namespace Poisson_Neumann {
                 Function<2>* >        neumann_data = {{1, &neumann_bc}};
       const std::vector<unsigned int>& degrees = tria.get_degree();
       Vector<double>  local_residuals(tria.n_active_cells());
+      auto t_estimate_start = high_resolution_clock::now();
       tria.poisson_residual_error_estimate(
                           {degrees[0]*degrees[0] + 1,
                            degrees[1]*degrees[1] + 1},
@@ -483,60 +574,106 @@ namespace Poisson_Neumann {
                            solution,
                            local_residuals
                            );
+      auto t_estimate_end = high_resolution_clock::now();
 
+
+      auto t_mark_and_refine_start = high_resolution_clock::now();
       tria.refine_fixed_number(local_residuals, 0.10);
+      auto t_mark_and_refine_end = high_resolution_clock::now();
+  
+      duration<double> t_estimate = 
+              t_estimate_end - t_estimate_start;
+      duration<double> t_mark_and_refine = 
+              t_mark_and_refine_end - t_mark_and_refine_start;
+
+      run_times.add_value(
+          "Estimate",
+          convert_time(t_estimate)
+      );
+      run_times.add_value(
+          "Mark and Refine",
+          convert_time(t_mark_and_refine)
+      );
+
     } else { 
       tria.coarsen_bezier_elements();
       tria.refine_global();   
     } // if ( strategy )
   
-    if (tria.n_levels() < 15) {
-      GridOutFlags::Svg svg_flags;
-      svg_flags.coloring = GridOutFlags::Svg::Coloring::none;
-      // svg_flags.label_level_number  = true;
-      // svg_flags.label_cell_index    = true;
-      // svg_flags.label_boundary_id   = true;
+    // if (tria.n_levels() < 15) {
+    //   GridOutFlags::Svg svg_flags;
+    //   svg_flags.coloring = GridOutFlags::Svg::Coloring::none;
+    //   // svg_flags.label_level_number  = true;
+    //   // svg_flags.label_cell_index    = true;
+    //   // svg_flags.label_boundary_id   = true;
   
-      std::string name = problem_out.svg.string() + "step0_grid_l"
-                            + std::to_string(tria.n_levels() - 1)
-                            + ".svg";  
-      std::ofstream out(name);
-      GridOut       grid_out;
-      grid_out.set_flags(svg_flags);
+    //   std::string name = problem_out.svg.string() + "step0_grid_l"
+    //                         + std::to_string(tria.n_levels() - 1)
+    //                         + ".svg";  
+    //   std::ofstream out(name);
+    //   GridOut       grid_out;
+    //   grid_out.set_flags(svg_flags);
   
-      grid_out.write_svg(tria, out);
-    }
+    //   grid_out.write_svg(tria, out);
+    // }
   
-    tria.prepare_assembly(); 
+    // tria.prepare_assembly(); 
   }
   
   void Poisson_Benchmark::run(){
     unsigned int level_count = 0; 
+    unsigned int old_level = 0;
+
+    std::string run_times_tex_out_name(problem_out.degree.string() + "run_times.tex");
+    std::string run_times_text_out_name(problem_out.degree.string() + "run_times.txt");
+
     cycle = 0;
     while (tria.n_levels() - 1 < ref + 1 && 
             H1 > 1e-13){
       cycle++;
+      old_level = tria.n_levels() - 1;
+
       this -> setup_system();
       this -> assemble_system();
       this -> solve();
-      this -> print_error();
+      // this -> print_error();
       this -> compute_h1_error();
-      this -> output_system();
-      if (level_count < 5) {
-        this -> estimate_and_mark();
+      // this -> output_system();
+      this -> estimate_and_mark();
+
+      if (old_level == tria.n_levels() - 1)
         level_count++;
-      } else {
-        tria.coarsen_bezier_elements();
+
+      if (level_count == 5) {
         tria.refine_global();
-        tria.set_boundary_dofs();
-        tria.refine_bezier_elements();
-        tria.compute_extraction_operators();
         level_count = 0; 
       }
+
+
+      std::filebuf file_tex_out;
+      std::filebuf file_text_out;
+
+      file_tex_out.open(run_times_tex_out_name.c_str(), std::ios::out);
+      file_text_out.open(run_times_text_out_name.c_str(), std::ios::out);
+
+      std::ostream run_times_tex_out(&file_tex_out);
+      std::ostream run_times_text_out(&file_text_out);
+
+      run_times.write_tex(run_times_tex_out, false);
+      run_times.write_text(run_times_text_out, dealii::TableHandler::TextOutputFormat::org_mode_table);
+
+      file_tex_out.close();
+      file_text_out.close();
+
+      run_times.start_new_row();
+      this -> prepare_assembly_and_measure_time();
     }
 
     // Write the resulting table to line
     problem_out.write_table_text(std::cout);
+    std::cout << "\n\n\n" << std::endl;
+    run_times.write_text(std::cout, dealii::TableHandler::TextOutputFormat::org_mode_table);
+
   }
   
   void Poisson_Benchmark::print_error(

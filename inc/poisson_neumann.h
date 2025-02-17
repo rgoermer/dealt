@@ -53,10 +53,16 @@
 #include <iostream>
 
 #include <utility>
+#include <chrono>
 
 
 namespace Poisson_Neumann {
   using namespace dealt;
+
+  using std::chrono::high_resolution_clock;
+  using std::chrono::duration_cast;
+  using std::chrono::duration;
+  using std::chrono::milliseconds;
 
   class IPF_Mapping : public Function<2> {
   public:
@@ -167,6 +173,9 @@ namespace Poisson_Neumann {
     Vector<double>            system_rhs;
 
     OutputSetup problem_out;
+
+    dealii::ConvergenceTable  run_times; 
+
     double      H1 = 1;
     double      L2 = 1;
     unsigned int              cycle;
@@ -198,6 +207,11 @@ namespace Poisson_Neumann {
     void output_system();
     void print_error();
     void estimate_and_mark();
+
+    void prepare_assembly_and_measure_time();
+    const std::string convert_time(
+      const std::chrono::duration<double>& time
+    ) const;
   };
 
 

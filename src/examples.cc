@@ -872,8 +872,13 @@ void print_example(std::string ex, int ref, int order){
     Linear_Elasticity::ElasticProblem<3> 
       problem(ref, order, Linear_Elasticity::Strategy::Uniform);
     problem.run();
-  } 
-  else 
+  } else if (ex == "beam") {
+    Classical::ClassicalProblem problem(ref, order, Classical::Type::Beam );
+    problem.run();
+  } else if (ex == "slab") {
+    Classical::ClassicalProblem problem(ref, order, Classical::Type::Slab);
+    problem.run();
+  } else 
     Assert(false, ExcMessage("The chosen case is not implemented"));
 }
 

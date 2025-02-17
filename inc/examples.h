@@ -22,6 +22,7 @@
 #include <lshape_standard.h>
 #include <linear_elasticity.h>
 #include <linear_elasticity_inhomogeneous.h>
+#include <beam.h>
 #include <mwe.h>
 
 

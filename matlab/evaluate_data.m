@@ -69,6 +69,7 @@ for o = p_min:p_max
     try
         opts = detectImportOptions(problem);
         readVariables = ["Level", "Cells", "DoFs", "L2", "H1", "k__CG_", "TOL__CG_"];
+%         readVariables = ["Level", "Cells", "DoFs_uniform", "DoFs", "L2", "H1_uniform", "H1", "k__CG_", "TOL__CG_"];
         opts.SelectedVariableNames = readVariables;
         data = readtable(problem, opts);
         data.ExtraVar1 = [];
@@ -120,11 +121,16 @@ for o = p_min:p_max
     if (mod(size(B, 1), 2) == 0)
         index = [index size(B, 1)];
     end
-    levels  = B(index, strcmp(readVariables, "Level"));
+%     levels  = B(index, strcmp(readVariables, "Level"));
     dofs    = B(index, strcmp(readVariables, "DoFs"));
-    cells   = B(index, strcmp(readVariables, "Cells"));
-    h1      = B(index, strcmp(readVariables, "H1"));
-    k       = B(index, strcmp(readVariables, "k__CG_"));
+    dofs(end+1) = B(end, strcmp(readVariables, "DoFs"));
+%     cells   = B(index, strcmp(readVariables, "Cells"));
+    h1             = B(index, strcmp(readVariables, "H1"));
+    h1(end+1)      = B(end,   strcmp(readVariables, "H1"));
+    k              = B(index, strcmp(readVariables, "k__CG_"));
+    k(end+1)       = B(end,   strcmp(readVariables, "k__CG_"));
+%     dofs_uniform = B(index, strcmp(readVariables, "DoFs_uniform"));
+%     h1_uniform   = B(index, strcmp(readVariables, "H1_uniform"));
     
 %     dofs(h1 < 7e-14) = [];
 %     k(h1 < 7e-14)    = [];
@@ -141,10 +147,9 @@ for o = p_min:p_max
     
     
     % Use dofs to calculate reference curve
-    ref = dofs.^(-(o)/dim) / h1(1);
+    ref = dofs.^(-(o)/dim) / h1(1);    
     
-    
-    %    (k(2:end) ./ k(1:end-1))' ./ (dofs(2:end) ./ dofs(1:end-1))';
+    mean((k(1:end-1) ./ k(2:end))' ./ (dofs(1:end-1) ./ dofs(2:end))')
     
     %     M = dofs(h1 < 5e-4);
     %     dof_comp = [dof_comp; o M(1)];
@@ -187,6 +192,12 @@ for o = p_min:p_max
         'Marker', Markers{i},  ...
         'LineWidth', lw        ...
         );
+%     loglog(dofs_uniform, h1_uniform, ...
+%         'Color', Colors(i, :), ...
+%         'LineStyle', '-.',      ...
+%         'Marker', Markers{i},  ...
+%         'LineWidth', lw        ...
+%         );
     
     loglog(dofs(index), ref(index), ...
         'Color', Colors(i, :), ...
@@ -195,8 +206,9 @@ for o = p_min:p_max
         'LineWidth', lw        ...
         );
     labels1{ind} = ['$$p = ' num2str(o) '$$'];
+%     labels1{ind+1} = ['$$p = ' num2str(o) '$$, uniform'];
     if ~strcmp(ref_index, 'none')
-        labels1{ind+1} = ['$$\mathcal{O}(h^{' num2str(o) '})$$'];
+        labels1{ind+1} = ['$$\mathcal{O}(h^{' num2str(o+1) '})$$'];
     end
     
     figure(fig2);
@@ -221,7 +233,9 @@ set(gca, 'XTickLabel', xticks, 'FontSize', fs-5);
 xlabel('DoFs',                  ...
     'Interpreter', 'latex', ...
     'FontSize', fs)
-ylabel('$$\|u - u_h\|_{H^1(\Omega)}$$', ...
+
+% \Delta u_h + f - au_h
+ylabel('$$\| \mathbf{r} \|_{L_2(\widetilde\Omega)}$$', ...
     'Interpreter', 'latex',         ...
     'FontSize', fs)
 legend(labels1, ...

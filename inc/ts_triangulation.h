@@ -1092,7 +1092,7 @@ namespace dealt {
   // As the actual implementation will be split for 2D and 3D in template specializations,
   // this instantiation will only throw errors whenever the user tries to create 
   // objects of type TS_Triangulation<dim, spacedim> with dim > 3 or dim < 2.
-  template<int, int>
+  template<int dim, int spacedim = dim>
   class TS_Triangulation;
   
   // TS_Triangulation specialization with dim = 2

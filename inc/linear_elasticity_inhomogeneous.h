@@ -17,6 +17,9 @@
 #include <deal.II/base/work_stream.h>
 #include <deal.II/base/multithread_info.h>
 
+#include <deal.II/fe/fe_bernstein.h>
+#include <deal.II/fe/fe_system.h>
+
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/numerics/data_out.h>
